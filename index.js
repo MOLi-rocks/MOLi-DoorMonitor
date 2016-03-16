@@ -45,7 +45,7 @@ function createWebArduino() {
     console.log('disconnect');
     board.disconnect();
     writeData({value: -1});
-
+    bot.sendMessage(groupChatId, '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯');
     createWebArduino();
   }
 
@@ -56,6 +56,7 @@ function createWebArduino() {
     led = new webduino.module.Led(board, board.getDigitalPin(10));
 
     console.log('ready');
+    bot.sendMessage(groupChatId, '我開始監控了喔 ^.<');
 
     button.on('pressed', onToggle);
     button.on('released', onToggle);
@@ -85,7 +86,7 @@ function createWebArduino() {
             console.log('開門');
             text = 'MOLi 開門';
           }
-          bot.sendMessage(groupChatId, text, {disable_notification: true});
+          bot.sendMessage(groupChatId, text);
         } else {
           console.log('重複');
         }
