@@ -58,11 +58,10 @@ function createWebArduino() {
     var text;
     board.samplingInterval = 20;
     button = new webduino.module.Button(board, board.getDigitalPin(11));
-    led = new webduino.module.Led(board, board.getDigitalPin(10));
 
     console.log('ready');
-    
-    status = board.getDigitalPin(11);
+
+    status = board.getDigitalPin(11).value;
     writeData({value: status});
     if (status === 0) {
       text = ' 開門中';
