@@ -7,10 +7,11 @@ var bodyParser = require('body-parser');
 var webduino = require('webduino-js');
 var Firebase = require('firebase');
 var TelegramBot = require('node-telegram-bot-api');
+var config = require('./env.js');
 
-var ref = new Firebase('');
-var token = '';
-var groupChatId = '';
+var ref = new Firebase( config.firebase );
+var token = config.telegram_token;
+var groupChatId = config.telegram_groupChatId;
 var bot = new TelegramBot(token, {polling: true});
 var button, status, timer;
 
@@ -26,7 +27,7 @@ var button, status;
 createWebArduino();
 
 function createWebArduino() {
-  var board = new webduino.WebArduino('');
+  var board = new webduino.WebArduino( config.boardId );
 
   board.on(webduino.BoardEvent.READY, onReady);
   board.on(webduino.BoardEvent.DISCONNECT, onDisconnect);
