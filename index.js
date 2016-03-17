@@ -55,13 +55,21 @@ function createWebArduino() {
   }
 
   function onReady() {
-    status = -1;
+    var text;
     board.samplingInterval = 20;
     button = new webduino.module.Button(board, board.getDigitalPin(11));
     led = new webduino.module.Led(board, board.getDigitalPin(10));
 
     console.log('ready');
-    bot.sendMessage(groupChatId, '我開始監控了喔 ^.<');
+    
+    status = board.getDigitalPin(11);
+    writeData({value: status});
+    if (status === 0) {
+      text = ' 開門中';
+    } else if (status === 1) {
+      text = ' 關門中';
+    }
+    bot.sendMessage(groupChatId, '我開始監控了喔 ^.<' + text);
 
     button.on('pressed', onToggle);
     button.on('released', onToggle);
@@ -83,7 +91,6 @@ function createWebArduino() {
 
         if (status != boardValue) {
           writeData({value: boardValue});
-          var text;
           if (boardValue == 1) {
             console.log('關門');
             text = 'MOLi 關門';
