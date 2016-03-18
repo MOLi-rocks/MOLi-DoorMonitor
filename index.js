@@ -3,6 +3,7 @@
  */
 
 var express = require('express');
+var request = require('request');
 var bodyParser = require('body-parser');
 var webduino = require('webduino-js');
 var Firebase = require('firebase');
@@ -25,6 +26,7 @@ var ref = new Firebase('')
 var button, status;
 
 createWebArduino();
+//getCameraSnapshot();
 
 function createWebArduino() {
   var board = new webduino.WebArduino( config.boardId );
@@ -118,6 +120,20 @@ function writeData(data) {
   var historyRef = ref.child('history');
   var newDataRef = historyRef.push();
   newDataRef.set(data);
+}
+
+function getCameraSnapshot() {
+  var options = {
+    url: 'http://163.22.32.59:50080/cgi-bin/wappaint?pic_size=2',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+    },
+    encoding: null
+  };
+
+  request(options, function(error, response, body) {
+      bot.sendPhoto(groupChatId, body);
+  });
 }
 
 var server = app.listen(3000, function () {
