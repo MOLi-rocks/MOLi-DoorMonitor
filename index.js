@@ -53,6 +53,7 @@ function createWebArduino() {
     board.disconnect();
     writeData({value: -1});
     bot.sendMessage(groupChatId, '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯');
+    getCameraSnapshot();
     createWebArduino();
   }
 
@@ -64,6 +65,7 @@ function createWebArduino() {
 
     console.log('ready');
     bot.sendMessage(groupChatId, '我開始監控了喔 ^.<');
+    getCameraSnapshot();
     onToggle();
 
     button.on('pressed', onToggle);
@@ -99,6 +101,7 @@ function createWebArduino() {
             text = text.concat('中');
           }
           bot.sendMessage(groupChatId, text);
+          getCameraSnapshot();
           writeData({value: boardValue});
         } else {
           console.log('重複');
@@ -133,6 +136,7 @@ function getCameraSnapshot() {
 
   request(options, function(error, response, body) {
       bot.sendPhoto(groupChatId, body);
+      console.log('Snapshot Send');
   });
 }
 
