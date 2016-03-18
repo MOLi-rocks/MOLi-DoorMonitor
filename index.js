@@ -56,19 +56,13 @@ function createWebArduino() {
 
   function onReady() {
     var text;
+    status = -2;
     board.samplingInterval = 20;
     button = new webduino.module.Button(board, board.getDigitalPin(11));
 
     console.log('ready');
-
-    status = board.getDigitalPin(11).value;
-    writeData({value: status});
-    if (status === 0) {
-      text = ' 開門中';
-    } else if (status === 1) {
-      text = ' 關門中';
-    }
-    bot.sendMessage(groupChatId, '我開始監控了喔 ^.<' + text);
+    bot.sendMessage(groupChatId, '我開始監控了喔 ^.<');
+    onToggle();
 
     button.on('pressed', onToggle);
     button.on('released', onToggle);
@@ -79,7 +73,7 @@ function createWebArduino() {
       if (timer) {
         clearTimeout(timer);
       }
-      if (status != -1) {
+      if (status >= 0) {
         timer = setTimeout(toggle, 2000);
       } else {
         toggle();
@@ -96,6 +90,9 @@ function createWebArduino() {
           } else if (boardValue == 0) {
             console.log('開門');
             text = 'MOLi 開門';
+          }
+          if (status == -2) {
+            text += '中';
           }
           bot.sendMessage(groupChatId, text);
         } else {
