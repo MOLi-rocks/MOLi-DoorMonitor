@@ -26,7 +26,6 @@ var ref = new Firebase('')
 var button, status;
 
 createWebArduino();
-//getCameraSnapshot();
 
 function createWebArduino() {
   var board = new webduino.WebArduino( config.boardId );
@@ -65,7 +64,6 @@ function createWebArduino() {
 
     console.log('ready');
     bot.sendMessage(groupChatId, '我開始監控了喔 ^.<');
-    getCameraSnapshot();
     onToggle();
 
     button.on('pressed', onToggle);
