@@ -75,6 +75,8 @@ function createWebArduino() {
       }
       if (status >= 0) {
         timer = setTimeout(toggle, 2000);
+      } else if (status === -2) {
+        timer = setTimeout(toggle, 1000);
       } else {
         toggle();
       }
@@ -83,7 +85,7 @@ function createWebArduino() {
         var boardValue = board.getDigitalPin(11).value;
 
         if (status != boardValue) {
-          writeData({value: boardValue});
+          console.log('status: ' + status);
           if (boardValue == 1) {
             console.log('關門');
             text = 'MOLi 關門';
@@ -92,13 +94,14 @@ function createWebArduino() {
             text = 'MOLi 開門';
           }
           if (status == -2) {
-            text += '中';
+            text = text.concat('中');
           }
           bot.sendMessage(groupChatId, text);
+          writeData({value: boardValue});
         } else {
           console.log('重複');
         }
-        console.log(boardValue);
+        console.log('boardValue: ' + boardValue);
         console.log('');
       }
     }
