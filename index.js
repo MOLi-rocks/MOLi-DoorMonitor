@@ -13,7 +13,7 @@ var config = require('./env.js');
 var ref = new Firebase( config.firebase );
 var token = config.telegram_token;
 var groupChatId = config.telegram_groupChatId;
-var bot = new TelegramBot(token, {polling: true});
+var bot = new TelegramBot(token, {webHook: true});
 var button, status, timer;
 
 var app = express();
