@@ -1,7 +1,3 @@
-/*
-   老俞好帥！
- */
-
 var express = require('express');
 var request = require('request');
 var bodyParser = require('body-parser');
@@ -13,6 +9,7 @@ var config = require('./env.js');
 var ref = new Firebase( config.firebase );
 var token = config.telegram_token;
 var groupChatId = config.telegram_groupChatId;
+var devGroupChatId = config.telegram_devGroupChatId;
 var bot = new TelegramBot(token, {webHook: true});
 var button, status, timer;
 
@@ -38,21 +35,23 @@ function createWebArduino() {
   ////////////////
 
   function onError(err) {
-    console.log(err);
+    log(err);
     board.disconnect();
     writeData({value: -1});
   }
 
   function onBeforeDisconnect() {
-    console.log('before disconnect');
+    log('before disconnect');
   }
 
   function onDisconnect() {
-    console.log('disconnect');
+    log('disconnect');
     board.disconnect();
     writeData({value: -1});
-    bot.sendMessage(groupChatId, '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯');
-    getCameraSnapshot();
+    
+    bot.sendMessage(devGroupChatId, '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯');
+    getCameraSnapshot(devGroupChatId);
+    
     createWebArduino();
   }
 
@@ -62,12 +61,13 @@ function createWebArduino() {
     board.samplingInterval = 20;
     button = new webduino.module.Button(board, board.getDigitalPin(11));
 
-    console.log('ready');
-    bot.sendMessage(groupChatId, '我開始監控了喔 ^.<');
+    log('Ready');
+    bot.sendMessage(devGroupChatId, '我開始監控了喔 ^.<');
     onToggle();
 
     button.on('pressed', onToggle);
     button.on('released', onToggle);
+
 
     ////////////////
 
@@ -76,36 +76,34 @@ function createWebArduino() {
         clearTimeout(timer);
       }
       if (status >= 0) {
-        timer = setTimeout(toggle, 2000);
+        timer = setTimeout(toggle(groupChatId), 2000);
       } else if (status === -2) {
-        timer = setTimeout(toggle, 1000);
+        timer = setTimeout(toggle(devGroupChatId), 1000);
       } else {
-        toggle();
+        toggle(groupChatId);
       }
 
-      function toggle() {
+      function toggle(chatId) {
         var boardValue = board.getDigitalPin(11).value;
 
         if (status != boardValue) {
-          console.log('status: ' + status);
+          log('status: ' + status);
           if (boardValue == 1) {
-            console.log('關門');
             text = 'MOLi 關門';
           } else if (boardValue == 0) {
-            console.log('開門');
             text = 'MOLi 開門';
           }
           if (status == -2) {
             text = text.concat('中');
           }
-          bot.sendMessage(groupChatId, text);
-          getCameraSnapshot();
+          log('Send "' + text + '" to ' + chatId);
+          bot.sendMessage(chatId, text);
+          getCameraSnapshot(chatId);
           writeData({value: boardValue});
         } else {
-          console.log('重複');
+          log('重複喔');
         }
-        console.log('boardValue: ' + boardValue);
-        console.log('');
+        log('boardValue: ' + boardValue);
       }
     }
   }
@@ -123,7 +121,7 @@ function writeData(data) {
   newDataRef.set(data);
 }
 
-function getCameraSnapshot() {
+function getCameraSnapshot(chatId) {
   var options = {
     url: 'http://163.22.32.59:50080/cgi-bin/wappaint?pic_size=2',
     headers: {
@@ -133,9 +131,31 @@ function getCameraSnapshot() {
   };
 
   request(options, function(error, response, body) {
-      bot.sendPhoto(groupChatId, body);
-      console.log('Snapshot Send');
+    log('Send snapshot to ' + chatId);
+    bot.sendPhoto(chatId, body);
   });
+}
+
+bot.onText(/\/status/, function (msg) {
+  var fromUsername = msg.from.username;
+  var chatId = msg.chat.id;
+  var resp = '@'+ fromUsername + ': ';
+  if (status === 1) {
+    resp += 'MOLi 關門中';
+  } else if (status === 0) {
+    resp += 'MOLi 開門中';
+  } else {
+    resp += '我現在 GG 中 Orz';
+  }
+  log('Send message to ' + '@'+ fromUsername + ' in ' + msg.chat.title);
+  bot.sendMessage(chatId, resp);
+});
+
+function log(text) {
+  var d = new Date();
+  var date = d.toLocaleDateString();
+  var time = d.toLocaleTimeString();
+  console.log(date + ' ' + time + ': ' + text);
 }
 
 var server = app.listen(3000, function () {
