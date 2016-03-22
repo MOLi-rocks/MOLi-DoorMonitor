@@ -10,7 +10,7 @@ var ref = new Firebase( config.firebase );
 var token = config.telegram_token;
 var groupChatId = config.telegram_groupChatId;
 var devGroupChatId = config.telegram_devGroupChatId;
-var bot = new TelegramBot(token, {webHook: true});
+var bot = new TelegramBot(token, {polling: true});
 var button, status, timer;
 
 var app = express();
