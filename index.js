@@ -75,15 +75,18 @@ function createWebArduino() {
       if (timer) {
         clearTimeout(timer);
       }
+      var chatId = groupChatId;
       if (status >= 0) {
-        timer = setTimeout(toggle(groupChatId), 2000);
+        timer = setTimeout(toggle, 2000);
       } else if (status === -2) {
-        timer = setTimeout(toggle(devGroupChatId), 1000);
+        chatId = devGroupChatId;
+        timer = setTimeout(toggle, 1000);
       } else {
-        toggle(groupChatId);
+        toggle();
       }
 
-      function toggle(chatId) {
+      function toggle() {
+        console.log(chatId);
         var boardValue = board.getDigitalPin(11).value;
 
         if (status != boardValue) {
