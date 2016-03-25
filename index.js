@@ -142,7 +142,7 @@ function getCameraSnapshot(chatId) {
 bot.onText(/\/status/, function (msg) {
   var fromUsername = msg.from.username;
   var chatId = msg.chat.id;
-  var resp = '@'+ fromUsername + ': ';
+  var resp = '@'+ fromUsername + ' ';
   if (status === 1) {
     resp += 'MOLi 關門中';
   } else if (status === 0) {
@@ -150,8 +150,16 @@ bot.onText(/\/status/, function (msg) {
   } else {
     resp += '我現在 GG 中 Orz';
   }
-  log('Send message to ' + '@'+ fromUsername + ' in ' + msg.chat.title);
+  log('Send message to ' + '@'+ fromUsername + ' in ' + msg.chat.title + '(' + msg.chat.id + '）');
   bot.sendMessage(chatId, resp);
+});
+
+bot.onText(/\/map/, function (msg) {
+  var fromUsername = msg.from.username;
+  var chatId = msg.chat.id;
+
+  log('Send location to ' + '@'+ fromUsername + ' in ' + msg.chat.title + '(' + msg.chat.id + '）');
+  bot.sendLocation(chatId, 23.9519631, 120.9274402);
 });
 
 function log(text) {
