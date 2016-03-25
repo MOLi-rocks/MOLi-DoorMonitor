@@ -132,7 +132,7 @@ function getCameraSnapshot(chatId) {
 
   request(options, function(error, response, body) {
     log('Send snapshot to ' + chatId);
-    bot.sendPhoto(chatId, body);
+    bot.sendPhoto(chatId, body, {disable_notification: true});
   });
 }
 
