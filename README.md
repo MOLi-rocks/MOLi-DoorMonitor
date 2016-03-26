@@ -1,5 +1,7 @@
 # MOLi DoorMonitor
 
+[![Dependency Status](https://david-dm.org/MOLi-Rocks/MOLi-DoorMonitor.svg)](https://david-dm.org/MOLi-Rocks/MOLi-DoorMonitor)
+
 ## Building
 
 ### 建立設定檔
