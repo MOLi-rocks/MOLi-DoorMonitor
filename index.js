@@ -19,9 +19,6 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
-var ref = new Firebase('')
-var button, status;
-
 createWebArduino();
 
 function createWebArduino() {
