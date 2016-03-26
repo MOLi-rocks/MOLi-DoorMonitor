@@ -1,9 +1,16 @@
 var express = require('express');
-var webduino = require('webduino-js');
-var firebase = require('firebase');
-var app = express();
 var bodyParser = require('body-parser');
+var webduino = require('webduino-js');
+var Firebase = require('firebase');
+var TelegramBot = require('node-telegram-bot-api');
 
+var ref = new Firebase('');
+var token = '';
+var groupChatId = '';
+var bot = new TelegramBot(token, {polling: true});
+var button, status, timer;
+
+var app = express();
 app.use(bodyParser.urlencoded({
   extended: true
 }));
@@ -43,40 +50,49 @@ function createWebArduino() {
   }
 
   function onReady() {
+    status = -1;
     board.samplingInterval = 20;
     button = new webduino.module.Button(board, board.getDigitalPin(11));
     led = new webduino.module.Led(board, board.getDigitalPin(10));
 
     console.log('ready');
-    console.log(board.getDigitalPin(11).value);
-    writeData({value: board.getDigitalPin(11).value});
 
     button.on('pressed', onToggle);
     button.on('released', onToggle);
 
     ////////////////
 
-    function onToggle(){
-      var boardValue = board.getDigitalPin(11).value;
+    function onToggle() {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      if (status != -1) {
+        timer = setTimeout(toggle, 2000);
+      } else {
+        toggle();
+      }
 
-      if (status != boardValue) {
-        writeData({value: boardValue});
+      function toggle() {
+        var boardValue = board.getDigitalPin(11).value;
 
-        if (boardValue == 1) {
-          console.log('關門');
-        } else if (boardValue == 0) {
-          console.log('開門');
+        if (status != boardValue) {
+          writeData({value: boardValue});
+          var text;
+          if (boardValue == 1) {
+            console.log('關門');
+            text = 'MOLi 關門';
+          } else if (boardValue == 0) {
+            console.log('開門');
+            text = 'MOLi 開門';
+          }
+          bot.sendMessage(groupChatId, text, {disable_notification: true});
+        } else {
+          console.log('重複');
         }
         console.log(boardValue);
         console.log('');
-      } else {
-        console.log('重複');
-        console.log(boardValue);
-        console.log('');
       }
-
     }
-
   }
 }
 
