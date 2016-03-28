@@ -77,7 +77,7 @@ function createWebArduino() {
         timer = setTimeout(toggle, 2000);
       } else if (status === -2) {
         chatId = devGroupChatId;
-        timer = setTimeout(toggle, 1000);
+        timer = setTimeout(toggle, 2000);
       } else {
         toggle();
       }
