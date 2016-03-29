@@ -56,7 +56,7 @@ function createWebArduino() {
     var text;
     status = -2;
     board.samplingInterval = 20;
-    button = new webduino.module.Button(board, board.getDigitalPin(11));
+    button = new webduino.module.Button(board, board.getDigitalPin(8));
 
     log('Ready');
     bot.sendMessage(devGroupChatId, '我開始監控了喔 ^.<');
@@ -72,6 +72,9 @@ function createWebArduino() {
       if (timer) {
         clearTimeout(timer);
       }
+
+      log('onToggle Status: ' + status);
+
       var chatId = groupChatId;
       if (status >= 0) {
         timer = setTimeout(toggle, 2000);
@@ -84,7 +87,7 @@ function createWebArduino() {
 
       function toggle() {
         console.log(chatId);
-        var boardValue = board.getDigitalPin(11).value;
+        var boardValue = board.getDigitalPin(8).value;
 
         if (status != boardValue) {
           log('status: ' + status);
