@@ -22,7 +22,11 @@ app.use(bodyParser.json());
 createWebArduino();
 
 function createWebArduino() {
-  var board = new webduino.WebArduino( config.boardId );
+  var option = {
+    device: config.boardId,
+    server: config.mqttBroker
+  };
+  var board = new webduino.WebArduino( option );
 
   board.on(webduino.BoardEvent.READY, onReady);
   board.on(webduino.BoardEvent.DISCONNECT, onDisconnect);
