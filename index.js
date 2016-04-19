@@ -185,7 +185,7 @@ function getCameraSnapshot(chatId) {
       if (err) {
         return console.error(err);
       }
-      console.log('Send successful!);
+      console.log('Send successful!');
     });
   });
 }
