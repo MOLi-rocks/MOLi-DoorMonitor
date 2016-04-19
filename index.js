@@ -3,14 +3,14 @@ var request = require('request');
 var bodyParser = require('body-parser');
 var webduino = require('webduino-js');
 var Firebase = require('firebase');
-var TelegramBot = require('node-telegram-bot-api');
+//var TelegramBot = require('node-telegram-bot-api');
 var config = require('./env.js');
 
 var ref = new Firebase( config.firebase );
 var token = config.telegram_token;
 var groupChatId = config.telegram_groupChatId;
 var devGroupChatId = config.telegram_devGroupChatId;
-var bot = new TelegramBot(token, {polling: true});
+//var bot = new TelegramBot(token, {polling: true});
 var button, status, timer;
 
 var app = express();
@@ -50,7 +50,18 @@ function createWebArduino() {
     board.disconnect();
     writeData({value: -1});
     
-    bot.sendMessage(devGroupChatId, '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯');
+    //bot.sendMessage(devGroupChatId, '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯');
+    //POST https://bot.moli.rocks/messages
+    var formData = {
+      chat_id: devGroupChatId,
+      text: '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯'
+    }
+    request.post({url:'https://bot.moli.rocks/messages', formData: formData}, function optionalCallback(err, httpResponse, body) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log('message success send!');
+    });
     getCameraSnapshot(devGroupChatId);
     
     createWebArduino();
@@ -63,7 +74,19 @@ function createWebArduino() {
     button = new webduino.module.Button(board, board.getDigitalPin(8));
 
     log('Ready');
-    bot.sendMessage(devGroupChatId, '我開始監控了喔 ^.<');
+    //bot.sendMessage(devGroupChatId, '我開始監控了喔 ^.<');
+    //POST https://bot.moli.rocks/messages
+    var formData = {
+      chat_id: devGroupChatId,
+      text: '我開始監控了喔 ^.<'
+    }
+    request.post({url:'https://bot.moli.rocks/messages', formData: formData}, function optionalCallback(err, httpResponse, body) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log('message success send!');
+    });
+
     onToggle();
 
     button.on('pressed', onToggle);
@@ -104,7 +127,20 @@ function createWebArduino() {
             text = text.concat('中');
           }
           log('Send "' + text + '" to ' + chatId);
-          bot.sendMessage(chatId, text);
+
+          //bot.sendMessage(chatId, text);
+          //POST https://bot.moli.rocks/messages
+          var formData = {
+            chat_id: chatId,
+            text: text
+          }
+          request.post({url:'https://bot.moli.rocks/messages', formData: formData}, function optionalCallback(err, httpResponse, body) {
+            if (err) {
+              return console.error(err);
+            }
+            console.log('message success send!');
+          });
+
           getCameraSnapshot(chatId);
           writeData({value: boardValue});
         } else {
@@ -139,32 +175,20 @@ function getCameraSnapshot(chatId) {
 
   request(options, function(error, response, body) {
     log('Send snapshot to ' + chatId);
-    bot.sendPhoto(chatId, body, {disable_notification: true});
+    //bot.sendPhoto(chatId, body, {disable_notification: true});
+    //POST https://bot.moli.rocks/photos
+    var formData = {
+      chat_id: chatId,
+      photo: body
+    }
+    request.post({url:'https://bot.moli.rocks/photos', formData: formData}, function optionalCallback(err, httpResponse, body) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log('Send successful!);
+    });
   });
 }
-
-bot.onText(/\/status/, function (msg) {
-  var fromUsername = msg.from.username;
-  var chatId = msg.chat.id;
-  var resp = '@'+ fromUsername + ' ';
-  if (status === 1) {
-    resp += 'MOLi 關門中';
-  } else if (status === 0) {
-    resp += 'MOLi 開門中';
-  } else {
-    resp += '我現在 GG 中 Orz';
-  }
-  log('Send message to ' + '@'+ fromUsername + ' in ' + msg.chat.title + '(' + msg.chat.id + '）');
-  bot.sendMessage(chatId, resp);
-});
-
-bot.onText(/\/map/, function (msg) {
-  var fromUsername = msg.from.username;
-  var chatId = msg.chat.id;
-
-  log('Send location to ' + '@'+ fromUsername + ' in ' + msg.chat.title + '(' + msg.chat.id + '）');
-  bot.sendLocation(chatId, 23.9519631, 120.9274402);
-});
 
 function log(text) {
   var d = new Date();
