@@ -165,13 +165,13 @@ function writeData(data) {
 }
 
 function getCameraSnapshot(chatId) {
-  var options = {
-    url: config.cameraURL,
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-    },
-    encoding: null
-  };
+  //var options = {
+  //  url: config.cameraURL,
+  //  headers: {
+  //    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+  //  },
+  //  encoding: null
+  //};
 
   request(options, function(error, response, body) {
     log('Send snapshot to ' + chatId);
@@ -179,13 +179,13 @@ function getCameraSnapshot(chatId) {
     //POST https://bot.moli.rocks/photos
     var formData = {
       chat_id: chatId,
-      photo: body
-    }
+      photo: config.cameraURL
+    };
     request.post({url:'https://bot.moli.rocks/photos', formData: formData}, function optionalCallback(err, httpResponse, body) {
       if (err) {
         return console.error(err);
       }
-      console.log('Send successful!');
+      console.log('photo Send successful!', body);
     });
   });
 }
