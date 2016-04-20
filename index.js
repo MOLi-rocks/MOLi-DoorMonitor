@@ -3,14 +3,12 @@ var request = require('request');
 var bodyParser = require('body-parser');
 var webduino = require('webduino-js');
 var Firebase = require('firebase');
-//var TelegramBot = require('node-telegram-bot-api');
 var config = require('./env.js');
 
 var ref = new Firebase( config.firebase );
 var token = config.telegram_token;
 var groupChatId = config.telegram_groupChatId;
 var devGroupChatId = config.telegram_devGroupChatId;
-//var bot = new TelegramBot(token, {polling: true});
 var button, status, timer;
 
 var app = express();
@@ -50,8 +48,6 @@ function createWebArduino() {
     board.disconnect();
     writeData({value: -1});
     
-    //bot.sendMessage(devGroupChatId, '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯');
-    //POST https://bot.moli.rocks/messages
     var formData = {
       chat_id: devGroupChatId,
       text: '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯'
@@ -74,8 +70,6 @@ function createWebArduino() {
     button = new webduino.module.Button(board, board.getDigitalPin(8));
 
     log('Ready');
-    //bot.sendMessage(devGroupChatId, '我開始監控了喔 ^.<');
-    //POST https://bot.moli.rocks/messages
     var formData = {
       chat_id: devGroupChatId,
       text: '我開始監控了喔 ^.<'
@@ -128,8 +122,6 @@ function createWebArduino() {
           }
           log('Send "' + text + '" to ' + chatId);
 
-          //bot.sendMessage(chatId, text);
-          //POST https://bot.moli.rocks/messages
           var formData = {
             chat_id: chatId,
             text: text
@@ -165,28 +157,16 @@ function writeData(data) {
 }
 
 function getCameraSnapshot(chatId) {
-  //var options = {
-  //  url: config.cameraURL,
-  //  headers: {
-  //    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-  //  },
-  //  encoding: null
-  //};
-
-  request(options, function(error, response, body) {
-    log('Send snapshot to ' + chatId);
-    //bot.sendPhoto(chatId, body, {disable_notification: true});
-    //POST https://bot.moli.rocks/photos
-    var formData = {
-      chat_id: chatId,
-      photo: config.cameraURL
-    };
-    request.post({url:'https://bot.moli.rocks/photos', formData: formData}, function optionalCallback(err, httpResponse, body) {
-      if (err) {
-        return console.error(err);
-      }
-      console.log('photo Send successful!', body);
-    });
+  log('Send snapshot to ' + chatId);
+  var formData = {
+    chat_id: chatId,
+    photo: config.cameraURL
+  };
+  request.post({url:'https://bot.moli.rocks/photos', formData: formData}, function optionalCallback(err, httpResponse, body) {
+    if (err) {
+      return console.error(err);
+    }
+    console.log('photo Send successful!', body);
   });
 }
 
