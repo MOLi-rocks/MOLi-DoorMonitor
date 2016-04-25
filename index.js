@@ -47,19 +47,26 @@ function createWebArduino() {
     log('disconnect');
     board.disconnect();
     writeData({value: -1});
-    
-    var formData = {
+
+    var data = {
       chat_id: devGroupChatId,
       text: '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯'
     }
-    request.post({url:'https://bot.moli.rocks/messages', formData: formData}, function optionalCallback(err, httpResponse, body) {
-      if (err) {
-        return console.error(err);
+    request.post(
+      {
+        url:'https://bot.moli.rocks/messages',
+        json: true,
+        body: data
+      },
+      function optionalCallback(err, httpResponse, body) {
+        if (err) {
+          return console.error(err);
+        }
+        log('message success send!');
       }
-      console.log('message success send!');
-    });
+    );
     getCameraSnapshot(devGroupChatId);
-    
+
     createWebArduino();
   }
 
@@ -70,16 +77,24 @@ function createWebArduino() {
     button = new webduino.module.Button(board, board.getDigitalPin(8));
 
     log('Ready');
-    var formData = {
+    var data = {
       chat_id: devGroupChatId,
       text: '我開始監控了喔 ^.<'
     }
-    request.post({url:'https://bot.moli.rocks/messages', formData: formData}, function optionalCallback(err, httpResponse, body) {
-      if (err) {
-        return console.error(err);
+
+    request.post(
+      {
+        url:'https://bot.moli.rocks/messages',
+        json: true,
+        body: data
+      },
+      function optionalCallback(err, httpResponse, body) {
+        if (err) {
+          return console.error(err);
+        }
+        console.log('message success send!');
       }
-      console.log('message success send!');
-    });
+    );
 
     onToggle();
 
@@ -126,12 +141,18 @@ function createWebArduino() {
             chat_id: chatId,
             text: text
           }
-          request.post({url:'https://bot.moli.rocks/messages', formData: formData}, function optionalCallback(err, httpResponse, body) {
-            if (err) {
-              return console.error(err);
+          request.post(
+            {
+              url:'https://bot.moli.rocks/messages',
+              formData: formData
+            },
+            function optionalCallback(err, httpResponse, body) {
+              if (err) {
+                return console.error(err);
+              }
+              log('message success send!');
             }
-            console.log('message success send!');
-          });
+          );
 
           getCameraSnapshot(chatId);
           writeData({value: boardValue});
@@ -158,16 +179,24 @@ function writeData(data) {
 
 function getCameraSnapshot(chatId) {
   log('Send snapshot to ' + chatId);
-  var formData = {
+  var data = {
     chat_id: chatId,
-    photo: config.cameraURL
+    photo: config.cameraURL,
+    disable_notification: true
   };
-  request.post({url:'https://bot.moli.rocks/photos', formData: formData}, function optionalCallback(err, httpResponse, body) {
-    if (err) {
-      return console.error(err);
+  request.post(
+    {
+      url:'https://bot.moli.rocks/photos',
+      json: true,
+      body: data
+    },
+    function optionalCallback(err, httpResponse, body) {
+      if (err) {
+        return console.error(err);
+      }
+      log('photo Send successful!', body);
     }
-    console.log('photo Send successful!', body);
-  });
+  );
 }
 
 function log(text) {
