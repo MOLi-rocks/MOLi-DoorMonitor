@@ -6,7 +6,7 @@ var Firebase = require('firebase');
 var config = require('./env.js');
 
 var ref = new Firebase( config.firebase );
-var token = config.telegram_token;
+var token = config.token;
 var groupChatId = config.telegram_groupChatId;
 var devGroupChatId = config.telegram_devGroupChatId;
 var button, status, timer;
@@ -55,6 +55,9 @@ function createWebArduino() {
     request.post(
       {
         url:'https://bot.moli.rocks/messages',
+        headers: {
+          Authorization: token
+        },
         json: true,
         body: data
       },
@@ -85,6 +88,9 @@ function createWebArduino() {
     request.post(
       {
         url:'https://bot.moli.rocks/messages',
+        headers: {
+          Authorization: token
+        },
         json: true,
         body: data
       },
@@ -137,14 +143,18 @@ function createWebArduino() {
           }
           log('Send "' + text + '" to ' + chatId);
 
-          var formData = {
+          var data = {
             chat_id: chatId,
             text: text
           }
           request.post(
             {
               url:'https://bot.moli.rocks/messages',
-              formData: formData
+              headers: {
+                Authorization: token
+              },
+              json: true,
+              body: data
             },
             function optionalCallback(err, httpResponse, body) {
               if (err) {
@@ -187,6 +197,9 @@ function getCameraSnapshot(chatId) {
   request.post(
     {
       url:'https://bot.moli.rocks/photos',
+      headers: {
+        Authorization: token
+      },
       json: true,
       body: data
     },
