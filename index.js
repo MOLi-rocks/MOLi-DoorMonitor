@@ -77,7 +77,7 @@ function createWebArduino() {
     var text;
     status = -2;
     board.samplingInterval = 20;
-    button = new webduino.module.Button(board, board.getDigitalPin(8));
+    button = new webduino.module.Button(board, board.getDigitalPin( config.boardPin ));
 
     log('Ready');
     var data = {
@@ -129,7 +129,7 @@ function createWebArduino() {
 
       function toggle() {
         console.log(chatId);
-        var boardValue = board.getDigitalPin(8).value;
+        var boardValue = board.getDigitalPin( config.boardPin ).value;
 
         if (status != boardValue) {
           log('status: ' + status);
