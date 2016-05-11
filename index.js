@@ -7,6 +7,7 @@ var config = require('./env.js');
 
 var ref = new Firebase( config.firebase );
 var token = config.token;
+var cameraApiUrl = config.cameraApiUrl;
 var groupChatId = config.telegram_groupChatId;
 var devGroupChatId = config.telegram_devGroupChatId;
 var button, status, timer;
@@ -63,9 +64,10 @@ function createWebArduino() {
       },
       function optionalCallback(err, httpResponse, body) {
         if (err) {
-          return console.error(err);
+          log(err);
+        } else {
+          log('message success send!');
         }
-        log('message success send!');
       }
     );
     getCameraSnapshot(devGroupChatId);
@@ -96,9 +98,10 @@ function createWebArduino() {
       },
       function optionalCallback(err, httpResponse, body) {
         if (err) {
-          return console.error(err);
+          log(err);
+        } else {
+          log('message success send!');
         }
-        console.log('message success send!');
       }
     );
 
@@ -158,9 +161,10 @@ function createWebArduino() {
             },
             function optionalCallback(err, httpResponse, body) {
               if (err) {
-                return console.error(err);
+                log(err);
+              } else {
+                log('message success send!');
               }
-              log('message success send!');
             }
           );
 
@@ -194,20 +198,34 @@ function getCameraSnapshot(chatId) {
     photo: config.cameraURL,
     disable_notification: true
   };
-  request.post(
-    {
-      url:'https://bot.moli.rocks/photos',
-      headers: {
-        Authorization: token
-      },
-      json: true,
-      body: data
-    },
+
+  request.get(
+    {url: cameraApiUrl + '/event/door',},
     function optionalCallback(err, httpResponse, body) {
       if (err) {
-        return console.error(err);
+        log(err);
+      } else {
+        setTimeout(function () {
+          log('鏡頭轉向成功');
+          request.post(
+            {
+              url:'https://bot.moli.rocks/photos',
+              headers: {
+                Authorization: token
+              },
+              json: true,
+              body: data
+            },
+            function optionalCallback(err, httpResponse, body) {
+              if (err) {
+                log(err);
+              } else {
+                log('photo Send successful!');
+              }
+            }
+          );
+        }, 2000);
       }
-      log('photo Send successful!', body);
     }
   );
 }
