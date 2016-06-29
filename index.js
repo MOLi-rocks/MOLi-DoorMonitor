@@ -27,6 +27,14 @@ function createWebArduino() {
   };
   var board = new webduino.WebArduino( option );
 
+  var router = express.Router();
+
+  router.get('/', function(req, res) {
+    res.json({ Status: status });
+  });
+
+  app.use('/', router);
+
   board.on(webduino.BoardEvent.READY, onReady);
   board.on(webduino.BoardEvent.DISCONNECT, onDisconnect);
   board.on(webduino.BoardEvent.ERROR, onError);
@@ -199,35 +207,21 @@ function getCameraSnapshot(chatId) {
     disable_notification: true
   };
 
-  request.get(
-    {url: cameraApiUrl + '/event/door',},
-    function optionalCallback(err, httpResponse, body) {
-      if (err) {
-        log(err);
-      } else {
-        setTimeout(function () {
-          log('鏡頭轉向成功');
-          request.post(
-            {
-              url:'https://bot.moli.rocks/photos',
-              headers: {
-                Authorization: token
-              },
-              json: true,
-              body: data
-            },
-            function optionalCallback(err, httpResponse, body) {
-              if (err) {
-                log(err);
-              } else {
-                log('photo Send successful!');
-              }
-            }
-          );
-        }, 2000);
-      }
+  request.post({
+    url:'https://bot.moli.rocks/photos',
+    headers: {
+      Authorization: token
+    },
+    json: true,
+    body: data
+  },
+  function optionalCallback(err, httpResponse, body) {
+    if (err) {
+      log(err);
+    } else {
+      log('photo Send successful!');
     }
-  );
+  });
 }
 
 function log(text) {
