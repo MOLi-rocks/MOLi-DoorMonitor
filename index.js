@@ -200,28 +200,44 @@ function writeData(data) {
 }
 
 function getCameraSnapshot(chatId) {
-  log('Send snapshot to ' + chatId);
-  var data = {
-    chat_id: chatId,
-    photo: config.cameraURL,
-    disable_notification: true
-  };
-
-  request.post({
-    url:'https://bot.moli.rocks/photos',
-    headers: {
-      Authorization: token
-    },
-    json: true,
-    body: data
-  },
-  function optionalCallback(err, httpResponse, body) {
+  request.get({
+    url: 'http://ncnu.hydra.click:65432/go_to/door',
+    json: true
+  }, function(err, httpResponse, body){
     if (err) {
+      log('set camera to door failed!');
       log(err);
     } else {
-      log('photo Send successful!');
+      log('set camera to door!');
     }
+
+    var data = {
+      chat_id: chatId,
+      photo: config.cameraURL,
+      disable_notification: true
+    };
+
+    log('Send snapshot to ' + chatId);
+
+    request.post({
+      url:'https://bot.moli.rocks/photos',
+      headers: {
+        Authorization: token
+      },
+      json: true,
+      body: data
+    },
+    function optionalCallback(err, httpResponse, body) {
+      if (err) {
+        log(err);
+      } else {
+        log('photo Send successful!');
+      }
+    });
   });
+
+
+
 }
 
 function log(text) {
