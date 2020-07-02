@@ -1,15 +1,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const webduino = require('webduino-js');
-const firebase = require('firebase');
+const firebaseAdmin = require('firebase-admin');
 const axios = require('axios');
 const config = require('./env.js');
 
-const ref = new firebase( config.firebase );
+const firebaseDatabaseURL = config.firebaseDatabaseURL;
 const token = config.token;
 const cameraURL = config.cameraURL;
-const groupChatId = config.telegram_groupChatId;
-const devGroupChatId = config.telegram_devGroupChatId;
+const groupChatId = config.telegramGroupChatId;
+const devGroupChatId = config.telegramDevGroupChatId;
 let status = -2;
 let button, timer;
 
@@ -21,9 +21,14 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.get('/', (req, res) => res.json({ Status: status }));
 
-const server = app.listen(4000, function () {
+const server = app.listen(process.env.PORT || '4000', function () {
   const host = server.address().address;
   const port = server.address().port;
+});
+
+firebaseAdmin.initializeApp({
+  credential: firebaseAdmin.credential.cert(config.firebaseServiceAccountKeyFilePath),
+  databaseURL: firebaseDatabaseURL
 });
 
 createWebArduino();
@@ -66,7 +71,7 @@ function createWebArduino() {
 
     sendMoliBotMsg(msgData, stage);
 
-    getCameraSnapshot(devGroupChatId);
+    //getCameraSnapshot(devGroupChatId);
 
     createWebArduino();
   }
@@ -136,7 +141,7 @@ function createWebArduino() {
 
           sendMoliBotMsg(msgData, stage);
 
-          getCameraSnapshot(chatId);
+          //getCameraSnapshot(chatId);
           writeData({value: boardValue});
         } else {
           log('重複喔');
@@ -150,13 +155,20 @@ function createWebArduino() {
 function writeData(data) {
   data.timestamp = new Date().getTime();
 
-  const statusRef = ref.child('status');
-  statusRef.set(data.value);
-  status = data.value;
-
-  const historyRef = ref.child('history');
+  const db = firebaseAdmin.database();
+  const historyRef = db.ref('history');
+  const statusRef = db.ref('status');
   const newDataRef = historyRef.push();
-  newDataRef.set(data);
+
+  newDataRef.set(data).catch(function(error) {
+    log('Firebase history Synchronization failed');
+  });
+
+  statusRef.set(data.value).then(function() {
+    status = data.value;
+  }).catch(function() {
+    log('Firebase status Synchronization failed');
+  });
 }
 
 function getCameraSnapshot(chatId) {
@@ -178,7 +190,7 @@ function getCameraSnapshot(chatId) {
           log('Send snapshot to ' + chatId + ' success!');
         }
       ).catch(function (error) {
-        log(error);
+        log('Send snapshot to ' + chatId + ' failed! ' + error);
       });
     }
   ).catch(function (error) {
@@ -195,16 +207,15 @@ function log(text) {
 }
 
 function sendMoliBotMsg(msgData = {}, stage = '') {
-  axios.post('https://bot.moli.rocks/messages', {
+  axios.post('https://bot.moli.rocks/messages', msgData,{
     headers: {
-      Authorization: token
-    },
-    data: msgData
+      'Authorization': token
+    }
   }).then(
     function (response) {
-      log(stage + ' ' + 'message success send!');
+      log(stage + ' message send success!');
     }
   ).catch(function (error) {
-    log(error);
+    log(stage + ' message send failed! ' + error);
   });
 }
