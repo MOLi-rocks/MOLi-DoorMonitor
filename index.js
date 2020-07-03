@@ -5,11 +5,16 @@ const firebaseAdmin = require('firebase-admin');
 const axios = require('axios');
 const config = require('./env.js');
 
-const firebaseDatabaseURL = config.firebaseDatabaseURL;
-const token = config.token;
-const cameraURL = config.cameraURL;
-const groupChatId = config.telegramGroupChatId;
-const devGroupChatId = config.telegramDevGroupChatId;
+const {
+  firebaseServiceAccountKeyFilePath,
+  firebaseDatabaseURL,
+  token,
+  cameraURL,
+  telegramGroupChatId: groupChatId,
+  telegramDevGroupChatId: devGroupChatId
+} = config;
+
+const appPort = normalizePort(process.env.PORT || '4000');
 let status = -2;
 let button, timer;
 
@@ -21,13 +26,10 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.get('/', (req, res) => res.json({ Status: status }));
 
-const server = app.listen(process.env.PORT || '4000', function () {
-  const host = server.address().address;
-  const port = server.address().port;
-});
+app.listen(appPort, () => log(`app listening at port ${appPort}`));
 
 firebaseAdmin.initializeApp({
-  credential: firebaseAdmin.credential.cert(config.firebaseServiceAccountKeyFilePath),
+  credential: firebaseAdmin.credential.cert(firebaseServiceAccountKeyFilePath),
   databaseURL: firebaseDatabaseURL
 });
 
@@ -219,3 +221,24 @@ function sendMoliBotMsg(msgData = {}, stage = '') {
     log(stage + ' message send failed! ' + error);
   });
 }
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
