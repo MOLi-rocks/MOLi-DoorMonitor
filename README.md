@@ -10,7 +10,7 @@
 cp env.js.example env.js
 ```
 
-在 env.js 內填入 Telegram chat id、Firebase URL、Webduino 序號 及 其他資訊。
+在 env.js 內填入 Telegram chat id、Firebase 金鑰檔案路徑、Firebase Database URL、Webduino 序號 及 其他資訊。
 
 ### 安裝依賴並啟動
 

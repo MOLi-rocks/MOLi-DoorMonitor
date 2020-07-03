@@ -1,39 +1,47 @@
-var express = require('express');
-var request = require('request');
-var bodyParser = require('body-parser');
-var webduino = require('webduino-js');
-var Firebase = require('firebase');
-var config = require('./env.js');
+const express = require('express');
+const bodyParser = require('body-parser');
+const webduino = require('webduino-js');
+const firebaseAdmin = require('firebase-admin');
+const axios = require('axios');
+const config = require('./env.js');
 
-var ref = new Firebase( config.firebase );
-var token = config.token;
-var cameraApiUrl = config.cameraApiUrl;
-var groupChatId = config.telegram_groupChatId;
-var devGroupChatId = config.telegram_devGroupChatId;
-var button, status, timer;
+const {
+  firebaseServiceAccountKeyFilePath,
+  firebaseDatabaseURL,
+  token,
+  cameraURL,
+  telegramGroupChatId: groupChatId,
+  telegramDevGroupChatId: devGroupChatId
+} = config;
 
-var app = express();
+const appPort = normalizePort(process.env.PORT || '4000');
+let status = -2;
+let button, timer;
+
+const app = express();
+
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json());
+app.get('/', (req, res) => res.json({ Status: status }));
+
+app.listen(appPort, () => log(`app listening at port ${appPort}`));
+
+firebaseAdmin.initializeApp({
+  credential: firebaseAdmin.credential.cert(firebaseServiceAccountKeyFilePath),
+  databaseURL: firebaseDatabaseURL
+});
 
 createWebArduino();
 
 function createWebArduino() {
-  var option = {
+  const option = {
     device: config.boardId,
     server: config.mqttBroker
   };
-  var board = new webduino.WebArduino( option );
 
-  var router = express.Router();
-
-  router.get('/', function(req, res) {
-    res.json({ Status: status });
-  });
-
-  app.use('/', router);
+  const board = new webduino.WebArduino( option );
 
   board.on(webduino.BoardEvent.READY, onReady);
   board.on(webduino.BoardEvent.DISCONNECT, onDisconnect);
@@ -53,65 +61,37 @@ function createWebArduino() {
   }
 
   function onDisconnect() {
-    log('disconnect');
+    const stage = 'Disconnect';
+    log(stage);
     board.disconnect();
     writeData({value: -1});
 
-    var data = {
+    const msgData = {
       chat_id: devGroupChatId,
       text: '我 ＧＧ 惹 ╰( ゜ω゜)っ✂╰ひ╯'
     }
-    request.post(
-      {
-        url:'https://bot.moli.rocks/messages',
-        headers: {
-          Authorization: token
-        },
-        json: true,
-        body: data
-      },
-      function optionalCallback(err, httpResponse, body) {
-        if (err) {
-          log(err);
-        } else {
-          log('message success send!');
-        }
-      }
-    );
-    getCameraSnapshot(devGroupChatId);
+
+    sendMoliBotMsg(msgData, stage);
+
+    //getCameraSnapshot(devGroupChatId);
 
     createWebArduino();
   }
 
   function onReady() {
-    var text;
-    status = -2;
+    const stage = 'Ready';
+    let text;
     board.samplingInterval = 20;
     button = new webduino.module.Button(board, board.getDigitalPin( config.boardPin ));
 
-    log('Ready');
-    var data = {
+    log(stage);
+
+    const msgData = {
       chat_id: devGroupChatId,
       text: '我開始監控了喔 ^.<'
     }
 
-    request.post(
-      {
-        url:'https://bot.moli.rocks/messages',
-        headers: {
-          Authorization: token
-        },
-        json: true,
-        body: data
-      },
-      function optionalCallback(err, httpResponse, body) {
-        if (err) {
-          log(err);
-        } else {
-          log('message success send!');
-        }
-      }
-    );
+    sendMoliBotMsg(msgData, stage);
 
     onToggle();
 
@@ -126,9 +106,11 @@ function createWebArduino() {
         clearTimeout(timer);
       }
 
+      const stage = 'toggle';
+
       log('onToggle Status: ' + status);
 
-      var chatId = groupChatId;
+      let chatId = groupChatId;
       if (status >= 0) {
         timer = setTimeout(toggle, 2000);
       } else if (status === -2) {
@@ -139,44 +121,29 @@ function createWebArduino() {
       }
 
       function toggle() {
-        console.log(chatId);
-        var boardValue = board.getDigitalPin( config.boardPin ).value;
+        log('use chat: ' + chatId);
+        let boardValue = parseInt(board.getDigitalPin( config.boardPin ).value);
 
-        if (status != boardValue) {
+        if (status !== boardValue) {
           log('status: ' + status);
-          if (boardValue == 1) {
+          if (boardValue === 1) {
             text = 'MOLi 關門';
-          } else if (boardValue == 0) {
+          } else if (boardValue === 0) {
             text = 'MOLi 開門';
           }
-          if (status == -2) {
+          if (status === -2) {
             text = text.concat('中');
           }
           log('Send "' + text + '" to ' + chatId);
 
-          var data = {
+          const msgData = {
             chat_id: chatId,
             text: text
           }
-          request.post(
-            {
-              url:'https://bot.moli.rocks/messages',
-              headers: {
-                Authorization: token
-              },
-              json: true,
-              body: data
-            },
-            function optionalCallback(err, httpResponse, body) {
-              if (err) {
-                log(err);
-              } else {
-                log('message success send!');
-              }
-            }
-          );
 
-          getCameraSnapshot(chatId);
+          sendMoliBotMsg(msgData, stage);
+
+          //getCameraSnapshot(chatId);
           writeData({value: boardValue});
         } else {
           log('重複喔');
@@ -190,64 +157,88 @@ function createWebArduino() {
 function writeData(data) {
   data.timestamp = new Date().getTime();
 
-  var statusRef = ref.child('status');
-  statusRef.set(data.value);
-  status = data.value;
+  const db = firebaseAdmin.database();
+  const historyRef = db.ref('history');
+  const statusRef = db.ref('status');
+  const newDataRef = historyRef.push();
 
-  var historyRef = ref.child('history');
-  var newDataRef = historyRef.push();
-  newDataRef.set(data);
+  newDataRef.set(data).catch(function(error) {
+    log('Firebase history Synchronization failed');
+  });
+
+  statusRef.set(data.value).then(function() {
+    status = data.value;
+  }).catch(function() {
+    log('Firebase status Synchronization failed');
+  });
 }
 
 function getCameraSnapshot(chatId) {
-  request.get({
-    url: 'http://ncnu.hydra.click:65432/go_to/door',
-    json: true
-  }, function(err, httpResponse, body){
-    if (err) {
-      log('set camera to door failed!');
-      log(err);
-    } else {
-      log('set camera to door!');
+  axios.get('http://ncnu.hydra.click:65432/go_to/door').then(
+    function (response) {
+      log('set camera to door success!');
+
+      axios.post('https://bot.moli.rocks/photos', {
+        headers: {
+          Authorization: token
+        },
+        data: {
+          chat_id: chatId,
+          photo: cameraURL,
+          disable_notification: true
+        }
+      }).then(
+        function (response) {
+          log('Send snapshot to ' + chatId + ' success!');
+        }
+      ).catch(function (error) {
+        log('Send snapshot to ' + chatId + ' failed! ' + error);
+      });
     }
-
-    var data = {
-      chat_id: chatId,
-      photo: config.cameraURL,
-      disable_notification: true
-    };
-
-    log('Send snapshot to ' + chatId);
-
-    request.post({
-      url:'https://bot.moli.rocks/photos',
-      headers: {
-        Authorization: token
-      },
-      json: true,
-      body: data
-    },
-    function optionalCallback(err, httpResponse, body) {
-      if (err) {
-        log(err);
-      } else {
-        log('photo Send successful!');
-      }
-    });
+  ).catch(function (error) {
+    log('set camera to door failed!');
+    log(error);
   });
-
-
-
 }
 
 function log(text) {
-  var d = new Date();
-  var date = d.toLocaleDateString();
-  var time = d.toLocaleTimeString();
+  const d = new Date();
+  const date = d.toLocaleDateString();
+  const time = d.toLocaleTimeString();
   console.log(date + ' ' + time + ': ' + text);
 }
 
-var server = app.listen(4000, function () {
-  var host = server.address().address;
-  var port = server.address().port;
-});
+function sendMoliBotMsg(msgData = {}, stage = '') {
+  axios.post('https://bot.moli.rocks/messages', msgData,{
+    headers: {
+      'Authorization': token
+    }
+  }).then(
+    function (response) {
+      log(stage + ' message send success!');
+    }
+  ).catch(function (error) {
+    log(stage + ' message send failed! ' + error);
+  });
+}
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
