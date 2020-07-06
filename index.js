@@ -81,6 +81,7 @@ function createWebArduino() {
   function onReady() {
     const stage = 'Ready';
     let text;
+    status = -2;
     board.samplingInterval = 20;
     button = new webduino.module.Button(board, board.getDigitalPin( config.boardPin ));
 
