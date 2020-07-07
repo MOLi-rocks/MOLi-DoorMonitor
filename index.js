@@ -9,6 +9,9 @@ const {
   firebaseServiceAccountKeyFilePath,
   firebaseDatabaseURL,
   token,
+  boardId,
+  boardPin,
+  mqttBroker,
   cameraURL,
   telegramGroupChatId: groupChatId,
   telegramDevGroupChatId: devGroupChatId
@@ -37,8 +40,8 @@ createWebArduino();
 
 function createWebArduino() {
   const option = {
-    device: config.boardId,
-    server: config.mqttBroker
+    device: boardId,
+    server: mqttBroker
   };
 
   const board = new webduino.WebArduino( option );
@@ -51,13 +54,14 @@ function createWebArduino() {
   ////////////////
 
   function onError(err) {
-    log(err);
+    const stage = 'Error';
+    log(stage + err);
     board.disconnect();
     writeData({value: -1});
   }
 
   function onBeforeDisconnect() {
-    log('before disconnect');
+    log('Before disconnect');
   }
 
   function onDisconnect() {
@@ -83,7 +87,7 @@ function createWebArduino() {
     let text;
     status = -2;
     board.samplingInterval = 20;
-    button = new webduino.module.Button(board, board.getDigitalPin( config.boardPin ));
+    button = new webduino.module.Button(board, board.getDigitalPin( boardPin ));
 
     log(stage);
 
@@ -123,7 +127,7 @@ function createWebArduino() {
 
       function toggle() {
         log('use chat: ' + chatId);
-        let boardValue = parseInt(board.getDigitalPin( config.boardPin ).value);
+        let boardValue = parseInt(board.getDigitalPin( boardPin ).value);
 
         if (status !== boardValue) {
           log('status: ' + status);
@@ -135,7 +139,6 @@ function createWebArduino() {
           if (status === -2) {
             text = text.concat('中');
           }
-          log('Send "' + text + '" to ' + chatId);
 
           const msgData = {
             chat_id: chatId,
@@ -177,7 +180,7 @@ function writeData(data) {
 function getCameraSnapshot(chatId) {
   axios.get('http://ncnu.hydra.click:65432/go_to/door').then(
     function (response) {
-      log('set camera to door success!');
+      log('set DVR camera to door success!');
 
       axios.post('https://bot.moli.rocks/photos', {
         headers: {
@@ -190,36 +193,31 @@ function getCameraSnapshot(chatId) {
         }
       }).then(
         function (response) {
-          log('Send snapshot to ' + chatId + ' success!');
+          log('Send DVR snapshot to ' + chatId + ' success!');
         }
       ).catch(function (error) {
-        log('Send snapshot to ' + chatId + ' failed! ' + error);
+        log('Send DVR snapshot to ' + chatId + ' failed! ' + error);
       });
     }
   ).catch(function (error) {
-    log('set camera to door failed!');
-    log(error);
+    log('set DVR camera to door failed!' + error);
   });
 }
 
-function log(text) {
-  const d = new Date();
-  const date = d.toLocaleDateString();
-  const time = d.toLocaleTimeString();
-  console.log(date + ' ' + time + ': ' + text);
-}
-
 function sendMoliBotMsg(msgData = {}, stage = '') {
+  const chatId = msgData.chat_id || undefined;
+  const text = msgData.text || undefined;
+
   axios.post('https://bot.moli.rocks/messages', msgData,{
     headers: {
       'Authorization': token
     }
   }).then(
     function (response) {
-      log(stage + ' message send success!');
+      log(stage + ' message [' + text + '] send to ' + chatId + ' success!');
     }
   ).catch(function (error) {
-    log(stage + ' message send failed! ' + error);
+    log(stage + ' message [' + text + '] send to ' + chatId + ' failed! ' + error);
   });
 }
 
@@ -243,3 +241,9 @@ function normalizePort(val) {
   return false;
 }
 
+function log(text) {
+  const d = new Date();
+  const date = d.toLocaleDateString();
+  const time = d.toLocaleTimeString();
+  console.log(date + ' ' + time + ': ' + text);
+}

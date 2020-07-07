@@ -1,2 +1,6 @@
 node_modules
 npm-debug.log
+env.js.example
+README.md
+.git
+.gitignore
