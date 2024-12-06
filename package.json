@@ -19,7 +19,7 @@
   "dependencies": {
     "axios": "^0.28.0",
     "body-parser": "^1.20.3",
-    "express": "^4.21.1",
+    "express": "^4.21.2",
     "firebase-admin": "^12.6.0",
     "webduino-js": "^0.7.0"
   }
